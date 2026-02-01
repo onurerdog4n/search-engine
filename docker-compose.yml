@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Veritabanı
+  postgres:
+    image: postgres:16-alpine
+    container_name: search-engine-postgres
+    environment:
+      POSTGRES_DB: search_engine
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: search-engine-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Mock API (Simulating external providers)
+  mock-api:
+    build:
+      context: ./backend/mock-api
+      dockerfile: Dockerfile
+    container_name: search-engine-mock-api
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./backend/mock-api/mocks:/app/mocks
+    restart: unless-stopped
+
+  # Backend (Go)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: search-engine-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mock-api:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/search_engine?sslmode=disable
+      REDIS_URL: redis:6379
+      PORT: 8080
+      SYNC_INTERVAL: 3600
+      RATE_LIMIT_PER_MINUTE: 60
+      CACHE_TTL_SECONDS: 60
+    restart: unless-stopped
+
+  # Frontend (NuxtJS)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: search-engine-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      API_BASE_URL: http://backend:8080
+      NUXT_PUBLIC_API_BASE: http://localhost:8080
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.nuxt
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
