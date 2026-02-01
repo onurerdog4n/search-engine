@@ -408,7 +408,7 @@ GET /api/v1/health               # Health check
 
 ## 📚 Dokümantasyon
 
-Kapsamlı dokümantasyon **[onurerdogan.com/docs_search/tr](https://onurerdogan.com/docs_search/tr)** adresinde mevcuttur
+Kapsamlı dokümantasyon **[onurerdogan.com/docs_search](https://onurerdogan.com/docs_search)** adresinde mevcuttur
 
 ### Kapsanan Konular:
 - 🏗️ **Mimari**: Clean Architecture, design pattern'ler, dependency injection
