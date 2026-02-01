@@ -43,7 +43,7 @@ graph LR
 ```bash
 # Repository'yi klonla
 git clone <repository-url>
-cd project-search
+cd search-engine
 
 # Tüm servisleri başlat (Backend, Frontend, PostgreSQL, Redis, Mock API'ler)
 docker-compose up --build
@@ -149,7 +149,7 @@ graph TD
 ### Proje Yapısı
 
 ```
-project-search/
+search-engine/
 ├── backend/
 │   ├── cmd/server/            # Uygulama giriş noktası
 │   ├── internal/
